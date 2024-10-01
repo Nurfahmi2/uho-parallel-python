@@ -11,7 +11,7 @@ module MonevGithub
   class API < Sinatra::Base
     PARALLEL_DB = Sequel.sqlite("./db/student_dashboard.db")
     OS_DB = Sequel.sqlite("./db/os_dashboard.db")
-
+    LOW_COMMIT_THRESHOLD = 5
     configure :development do
       register Sinatra::Reloader
     end
@@ -26,6 +26,7 @@ module MonevGithub
       result_arr  =  results.to_a[0]
       @total_commits = result_arr[0]
       @average_commits = result_arr[1]
+      @bottom_students = db_orm[:students].where(Sequel[:commits] < LOW_COMMIT_THRESHOLD).order(:commits).to_a
       top_commit = result_arr[2]
       @top_performer = db_orm[:students].where(commits: top_commit).first
     end

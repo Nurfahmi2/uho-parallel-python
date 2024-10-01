@@ -6,6 +6,17 @@
     <title>UHO Student Performance Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+
 </head>
 <body class="bg-gray-100">
     <div class="p-6 max-w-6xl mx-auto">
@@ -34,6 +45,10 @@
             </div>
         </div>
         <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Commit Table</h2>
+            <table id="bottom-students-table"></table>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
             <h2 class="text-xl font-semibold mb-4">Performance Distribution</h2>
             <div class="h-80">
                 <canvas id="scatterChart"></canvas>
@@ -47,7 +62,18 @@
             </div>
         </div>
     </div>
+
     <script>
+        new DataTable('#bottom-students-table', {
+            data: <%= @bottom_students.to_json %>,
+            columns: [
+                { data: 'id', title: 'ID' },
+                { data: 'name', title: 'Name' },
+                { data: 'commits', title: 'Commits' }
+            ],
+            order: [[2, 'asc']] // Sort by the third column (commits) in descending order
+
+        });
         // scatter of number of commits & added line
         new Chart(document.getElementById('commitChart'), {
             type: 'scatter',
