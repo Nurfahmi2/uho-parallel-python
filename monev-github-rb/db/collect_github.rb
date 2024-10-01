@@ -38,30 +38,39 @@ class GitHubStatsCollector
   end
 end
 
-DB = Sequel.sqlite('./db/student_dashboard.db')
-# Usage example
-collector = GitHubStatsCollector.new(ENV['GITHUB_TOKEN'])
+def do_collecting(db_orm,repos)
+  collector = GitHubStatsCollector.new(ENV['GITHUB_TOKEN'])
+  repos.map do |rp|
+    account_gits = db_orm[:students].where(git_repo: rp).select(:account_git).map{|s| s[:account_git]}
+    stats = collector.collect_stats(rp, account_gits)
+  
+    stats.each do |account, user_stats|
+      db_orm[:students].where(account_git: account).update(commits: user_stats[:commits],lines_added: user_stats[:additions],lines_deleted:user_stats[:deletions])
+      puts "updating data for #{account}, stats: (#{user_stats}})"    
+    end  
+  end  
+end
 
-
-repos = ['ilhamariefprabowo/ilkom-22-pararel-1','zu0909/ilkom-22-paralel-2',
+def main()
+  if ARGV.length == 0
+    puts "Usage: #{File.basename(__FILE__)} <argument1> "
+    exit
+  end
+  
+  argument1 = ARGV[0]
+  if argument1 == 'paralel'
+    db_orm = Sequel.sqlite('./db/student_dashboard.db')
+    repos = ['ilhamariefprabowo/ilkom-22-pararel-1','zu0909/ilkom-22-paralel-2',
       'mh1225az/ilkom22-pararel-3',
       'andinajwa/ilkom-22-Kelompok-4',
       'iceblessedtea/ilkom22-paralel-5',
       'aooneoow/ilkom-22-paralel-7','fryzkaamlya/ilkom-22-pararel-kelompok-6']
-
-repos.map do |rp|
-  # student_accounts = ['ilhamarief0','FaizalMuhammad', 'Sann094', 'Jawir0', 'Fikram57']
-  # account_gits = DB[:students].where(git_repo: rp).to_a
-  account_gits = DB[:students].where(git_repo: rp).select(:account_git).map{|s| s[:account_git]}
-  stats = collector.collect_stats(rp, account_gits)
-
-  stats.each do |account, user_stats|
-    # puts "  Commits: #{user_stats[:commits]}"
-    # puts "  Lines added: #{user_stats[:additions]}"
-    # puts "  Lines deleted: #{user_stats[:deletions]}"
-    DB[:students].where(account_git: account).update(commits: user_stats[:commits],lines_added: user_stats[:additions],lines_deleted:user_stats[:deletions])
-
-    puts "updating data for #{account}, stats: (#{user_stats}})"    
-
-  end  
+    
+    do_collecting(db_orm,repos)
+  elsif argument1 == 'os'
+  end
 end
+
+
+main()
+
