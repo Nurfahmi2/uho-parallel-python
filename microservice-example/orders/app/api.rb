@@ -10,7 +10,7 @@ USER_URL = ENV['USER_URL'] || "http://127.0.0.1:4567"
 module OrderService
   class API < Sinatra::Base
     get '/order/user/:user_id' do
-      user_id = params['user_id']
+      "List of orders for user #{user_id}"
       
       response = HTTPX.get("#{USER_URL}/users/#{user_id}")
       unless response.error
