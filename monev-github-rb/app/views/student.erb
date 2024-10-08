@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UHO Student Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+
+</head>
+<body class="bg-gray-100">
+    <div class="p-6 max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-center text-blue-500 mb-4">UHO Student Performance Dashboard</h1>
+        <h2 class="text-3xl font-bold text-center text-blue-500 mb-4"><%= @course_title  %></h2>
+        
+        <img class="h-20 w-20 mx-auto rounded-full border-2 border-blue-500 mb-6" src="/images/Logo_Universitas_Halu_Oleo.png" alt="UHO Logo">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white shadow rounded-lg p-4 flex-1 min-w-[200px]">
+                <h3 class="font-semibold mb-2">Total Commits </h3>
+                <p class="text-2xl font-bold"><%= @total_commits %></p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-4 flex-1 min-w-[200px]">
+                <h3 class="font-semibold mb-2">Average Commits </h3>
+                <p class="text-2xl font-bold"><%= @average_commits.to_i %></p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-4 flex-1 min-w-[200px]">
+                <h3 class="font-semibold mb-2">Top Performer </h3> 
+                <p class="text-2xl font-bold"><%= "#{@top_performer[:name]} (#{@top_performer[:commits]})" %></p> 
+            </div>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Commit Distribution</h2>
+            <div class="h-80">
+                <canvas id="commitChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Commit Table</h2>
+            <table id="bottom-students-table"></table>
+            <br>
+            <b> Notes: </b>
+            <p> Siswa dengan jumlah commits < 5 akan muncul di table ini</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Performance Distribution</h2>
+            <div class="h-80">
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-4">
+            <h2 class="text-xl font-semibold mb-4">Code Contribution</h2>
+            <div class="h-80">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new DataTable('#bottom-students-table', {
+            data: <%= @bottom_students.to_json %>,
+            columns: [
+                { data: 'id', title: 'ID' },
+                { data: 'name', title: 'Name' },
+                { data: 'commits', title: 'Commits' }
+            ],
+            order: [[2, 'asc']] // Sort by the third column (commits) in descending order
+
+        });
+        // scatter of number of commits & added line
+        new Chart(document.getElementById('commitChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Students',
+                    data: <%= @students.map { |s| { y: s[:commits], x: s[:id], name: s[:name] } }.to_json %>,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }]
+            },
+            options: {
+                scales: {
+                    y: { title: { display: true, text: 'Commits' } },
+                    x: { title: { display: true, text: 'Student ID' } }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.raw.name || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += `(${context.parsed.x}, ${context.parsed.y})`;
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+         
+        // scatter of number of commits & added line
+        new Chart(document.getElementById('scatterChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Students',
+                    data: <%= @students.map { |s| { y: s[:commits], x: s[:lines_added], name: s[:name] } }.to_json %>,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Lines Added' } },
+                    y: { title: { display: true, text: 'Commits' } }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.raw.name || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += `(${context.parsed.x}, ${context.parsed.y})`;
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+         
+         // Line Chart of contribution
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: <%= @students.map { |s| s[:name]}.to_json %>,
+                datasets: [{
+                    label: 'Lines Added',
+                    data: <%= @students.map { |s| s[:lines_added]}.to_json %>,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }, {
+                    label: 'Lines Deleted',
+                    data: <%= @students.map { |s| s[:lines_deleted]}.to_json %>,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Lines of Code' } }
+                }
+            }
+        });
+    </script>
+   
+</body>
+</html>

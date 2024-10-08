@@ -1,0 +1,45 @@
+  <script>
+        // Scatter Chart
+        new Chart(document.getElementById('scatterChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Students',
+                    data: <%= @students.map { |s| { x: s[:commits], y: s[:lines_added] } }.to_json %>,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Commits' } },
+                    y: { title: { display: true, text: 'Lines Added' } }
+                }
+            }
+        });
+
+       
+
+        // Line Chart
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: <%= @students.map(&:name).to_json %>,
+                datasets: [{
+                    label: 'Lines Added',
+                    data: <%= @students.map(&:lines_added).to_json %>,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }, {
+                    label: 'Lines Deleted',
+                    data: <%= @students.map(&:lines_deleted).to_json %>,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Lines of Code' } }
+                }
+            }
+        });
+    </script>

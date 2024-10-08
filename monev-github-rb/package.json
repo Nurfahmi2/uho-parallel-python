@@ -1,0 +1,19 @@
+{
+  "name": "monev-github",
+  "version": "1.0.0",
+  "description": "mvp for monitoring student work",
+  "type": "module",
+  "main": "getcommit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "monev"
+  ],
+  "author": "riansyahtohamba",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2"
+  }
+}
